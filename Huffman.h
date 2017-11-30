@@ -4,6 +4,7 @@
 #include<cstdlib>
 #include<fstream>
 #include<iostream>
+#include <math.h>
 #define maxval 10000        //最大权值  
 #define maxsize 1000        //数组大小的最大值  
 #define maxlongth 1000 
@@ -22,15 +23,21 @@ public:
 	int text_wight[M];      //统计读入huffman文件的字符对应权值
 	char wight_in_text[N+3];   //写入text的字符权值,末尾是\r\n\0(写入)或\0（读入）
 
+	int decimal[maxsize];
+	char binary[maxsize];
+
 	HuffmanTree tree[M];    //huffman树
 	CodeType code[N];       //huffman编码表
 public:
 	//  Huffman();
 	// ~Huffman();
-	void initialize(char temp[], char temp_ch[], int temp_wight[]);       //初始化temp_ch[N] temp_wight[N];统计huffman树文件的各字符权重
+	void initialize(char text[], char text_ch[], int text_wight[]);       //初始化temp_ch[N] temp_wight[N];统计huffman树文件的各字符权重
 	void initialize_simpe(char text_ch[], int temp_wight[]);              //直接初始化
+	void code_01(char temp[], char text[]);                               //6位01码编译成字符
+	void decode_01(char temp[], char text[]);                             //字符解码成6位01码
+
 	void infile_read(char temp[], char text[]);                           //从源文件中读取数据,存入temp[]
-	void find_sort(char temp[], char text[]);                             //将读入的temp存入text结尾
+	void find_sort(char temp[], char text[]);                             //将读入的temp存入text结尾void binary_to_H95(char huffman_95[], char text[]);             //现将二进制转为95进制，再存储
 
 	void CreateHuffmanTree(HuffmanTree tree[], char text_ch[], int text_wight[]);     //创建Huffman树  
 	void write_tree_weight(int text_wight[], char wight_in_text[]);    //保存入text的权值
@@ -129,6 +136,66 @@ void Huffman::initialize_simpe(char text_ch[], int text_wight[])  //直接将huf
 		text_ch[i] = '\0';
 		text_wight[i] = 0;
 	}
+}
+
+void Huffman::code_01(char binarycode[], char temp[])
+{
+	int flag = strlen(binarycode)%6;  //01码总数除6的余
+	int cur_binary = flag;
+	int cur_temp = flag + 1;
+	int sum = 0;
+	for (int i = 0;i < flag;i++)
+	{
+		temp[i] = binarycode[i];
+	}
+	temp[flag] = (' ' + 67);       //不属于从空格开始的64位符号
+	while (cur_binary < strlen(binarycode))
+	{
+		for (int i = 6;i > 0;i--)
+		{
+			if (binarycode[cur_binary]== '1')
+			{
+				sum += (int)pow(2, i - 1);
+			}
+			cur_binary++;
+		}
+		temp[cur_temp] = (sum + ' ');
+		cur_temp++;
+		sum = 0;
+	}
+	temp[cur_temp] = '\0';
+}
+
+void Huffman::decode_01(char temp[], char text[])
+{
+	int cur_temp = 1;     //比text多1，以过滤RIP
+	int cur_text = 0;
+	int num = 0;
+	for (int i = 0;temp[i] != (' ' + 67);i++)
+	{
+		text[i] = temp[i];
+		cur_temp++;
+		cur_text++;
+	}
+	while (temp[cur_temp] != '\0')
+	{
+		num = (temp[cur_temp] - ' ');
+		for (int i = 6;i > 0;i--)
+		{
+			if(num/ (int)pow(2, i - 1)==1)
+			{
+				num -= (int)pow(2, i - 1);
+				text[cur_text] = '1';
+			}
+			else
+			{
+				text[cur_text] = '0';
+			}
+			cur_text++;
+		}
+		cur_temp++;
+	}
+	text[cur_text] = '\0';
 }
 
 void Huffman::write_tree_weight(int text_wight[], char wight_in_text[])
