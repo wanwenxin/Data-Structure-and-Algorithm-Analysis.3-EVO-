@@ -1,1 +1,4 @@
-# Data-Structure-and-Algorithm-Analysis.3-EVO-
+1.支持对数据分析，建树，并编码
+2.支持多行输入，输出
+3.支持独立解码
+4.支持内容压缩
